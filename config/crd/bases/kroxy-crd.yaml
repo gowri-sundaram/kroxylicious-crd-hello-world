@@ -1,0 +1,46 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: kroxies.example.com
+spec:
+  group: example.com
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                image:
+                  type: string
+                volumes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      hostPath:
+                        type: string
+                      mountPath:
+                        type: string
+                      readOnly:
+                        type: boolean
+                ports:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      containerPort:
+                        type: integer
+                      hostPort:
+                        type: integer
+  scope: Namespaced
+  names:
+    plural: kroxies
+    singular: kroxy
+    kind: Kroxy

@@ -1,0 +1,18 @@
+apiVersion: example.com/v1
+kind: Kroxy
+metadata:
+  name: my-kroxy
+spec:
+  image: kroxylicious:latest
+  volumes:
+    - name: config-volume
+      hostPath: /tmp
+      mountPath: /tmp
+      readOnly: false
+  ports:
+    - containerPort: 9192
+      hostPort: 9192
+    - containerPort: 9193
+      hostPort: 9193
+    - containerPort: 9194
+      hostPort: 9194
