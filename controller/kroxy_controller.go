@@ -5,6 +5,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -28,6 +29,17 @@ func (r *KroxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	})
 	if err := r.Get(ctx, req.NamespacedName, &kroxy); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Check if the Pod already exists
+	existingPod := &corev1.Pod{}
+	err := r.Get(ctx, client.ObjectKey{Name: kroxy.Name, Namespace: req.Namespace}, existingPod)
+	if err == nil {
+		logger.Info("Pod already exists, skipping creation", "pod", kroxy.Name)
+		return ctrl.Result{}, nil
+	}
+	if !apierrors.IsNotFound(err) {
+		return ctrl.Result{}, err
 	}
 
 	var volumeMounts []corev1.VolumeMount
@@ -62,10 +74,11 @@ func (r *KroxyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:         kroxy.Name,
-					Image:        kroxy.Spec.Image,
-					VolumeMounts: volumeMounts,
-					Ports:        ports,
+					Name:            kroxy.Name,
+					Image:           kroxy.Spec.Image,
+					ImagePullPolicy: corev1.PullNever,
+					VolumeMounts:    volumeMounts,
+					Ports:           ports,
 				},
 			},
 			Volumes: volumes,
