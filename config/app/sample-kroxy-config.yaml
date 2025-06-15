@@ -1,0 +1,23 @@
+---
+management:
+  endpoints:
+    prometheus: {}
+virtualClusters:
+  - name: demo
+    targetCluster:
+      bootstrapServers: ec2-sample.us-west-2.compute.amazonaws.com:9092
+    gateways:
+      - name: mygateway
+        portIdentifiesNode:
+          bootstrapAddress: localhost:9192
+    logNetwork: false
+    logFrames: false
+filterDefinitions:
+#- name: toUpper
+#  type: ProduceRequestTransformation
+#  config:
+#    transformation: UpperCasing
+#    transformationConfig:
+#      charset: UTF-8
+#defaultFilters:
+#  - toUpper
