@@ -1,0 +1,65 @@
+services:
+  broker:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: broker
+    container_name: broker
+    ports:
+      - 9092:9092
+      - 9093:9093
+      - 9094:9094
+      - 9095:9095
+    volumes:
+      - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:ro
+      - ./kafka.broker.keystore.jks:/etc/kafka/secrets/kafka.broker.keystore.jks:ro
+      - ./kafka.broker.truststore.jks:/etc/kafka/secrets/kafka.broker.truststore.jks:ro
+      - ./keystore-creds:/etc/kafka/secrets/keystore-creds:ro
+      - ./truststore-creds:/etc/kafka/secrets/truststore-creds:ro
+      - ./key-creds:/etc/kafka/secrets/key-creds:ro
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_NODE_ID: 1
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT,SSL:SSL,SASL_SSL:SASL_SSL
+
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://ec2-35-90-106-177.us-west-2.compute.amazonaws.com:9092,SASL_PLAINTEXT://ec2-35-90-106-177.us-west-2.compute.amazonaws.com:9093,SSL://ec2-35-90-106-177.us-west-2.compute.amazonaws.com:9094,SASL_SSL://ec2-35-90-106-177.us-west-2.compute.amazonaws.com:9095
+
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092,SASL_PLAINTEXT://0.0.0.0:9093,SSL://0.0.0.0:9094,SASL_SSL://0.0.0.0:9095
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
+      # SASL Configuration
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAINTEXT
+
+      # Enable SASL for the SASL_PLAINTEXT listener
+      KAFKA_LISTENER_NAME_SASL_PLAINTEXT_SASL_ENABLED_MECHANISMS: PLAIN
+
+      # NEW: Enable SASL for the SASL_SSL listener
+      # Note: Use double underscore for hyphenated listener names in env vars
+      KAFKA_LISTENER_NAME_SASL__SSL_SASL_ENABLED_MECHANISMS: PLAIN
+
+      # SSL Configuration (applies to both SSL and SASL_SSL listeners)
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: keystore-creds
+      KAFKA_SSL_KEY_CREDENTIALS: key-creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore-creds
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+
+      # Explicitly disable client authentication for SSL listener
+      KAFKA_SSL_CLIENT_AUTH: none
+
+      # NEW: Also disable client cert auth for SASL_SSL (SASL handles authentication)
+      KAFKA_LISTENER_NAME_SASL__SSL_SSL_CLIENT_AUTH: none
+
+      # JAAS Configuration file
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
